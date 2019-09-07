@@ -32,7 +32,7 @@ case $opt in
   read -ra DIRS <<< "$dirs"
   IFS=$IFS_bak
   volumes="$volumes -v ${DIRS[0]}:/bob${volume_counter}"
-  sharades="$sharades -s ${DIRS[1]};/bob${volume_counter};yes;no;no;all"
+  sharades="$sharades -s ${DIRS[1]};/bob${volume_counter};yes;no;no;${username}"
   (( volume_counter += 1 ))
 ;;
 esac
