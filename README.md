@@ -6,7 +6,7 @@ Use [dperson/samba](https://github.com/dperson/samba) docker image to run samba 
 
 ## Запуск докера
 ```
-./run-docker.sh -u samba_user_name -p samba_user_password -d dir1=net_dir1,dir2=net_dir2,dir3=net_dir3
+./run-docker.sh -u samba_user_name -p samba_user_password -d dir1=net_label1 -d dir2=net_label2
 ```
 
 # Windows
