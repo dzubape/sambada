@@ -70,6 +70,8 @@ docker run \
 --restart=always \
 -ti \
 -d \
+-e USERID=$(id -u) \
+-e GROUPID=$(id -g) \
 -p 139:139 \
 -p 445:445 \
 $volumes \
