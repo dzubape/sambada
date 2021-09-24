@@ -63,15 +63,18 @@ then
   echo "No volumes specified (option -d)"
   print_help
   exit -1
-fi
+fi 
+
+[[ -z $SAMBA_USERID ]] && SAMBA_USERID=$(id -u)
+[[ -z $SAMBA_GROUPID ]] && SAMBA_GROUPID=$(id -g)
 
 docker run \
 --name samba \
 --restart=always \
 -ti \
 -d \
--e USERID=$(id -u) \
--e GROUPID=$(id -g) \
+-e USERID=$SAMBA_USERID \
+-e GROUPID=$SAMBA_GROUPID \
 -p 139:139 \
 -p 445:445 \
 $volumes \
@@ -79,6 +82,9 @@ dperson/samba \
 -r \
 -p \
 -u "${username};${password}" \
+-g "map archive = no" \
+-g "map system = no" \
+-g "map hidden = no" \
 $sharades
 
 #<name;/path>[;browse;readonly;guest;users;admins;writelist;comment]
