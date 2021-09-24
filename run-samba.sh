@@ -3,8 +3,8 @@
 function print_help() {
   echo "Script usage:"
   echo -e "\t-h\tfor this help"
-  echo -e "\t-u\tfor samba username"
-  echo -e "\t-p\tfor samba user password"
+  echo -e "\t-u\tfor samba username;password"
+#  echo -e "\t-p\tfor samba user password"
   echo -e "\t-d\tlocal_path=label (multiple)"
 }
 
@@ -17,23 +17,32 @@ fi
 volumes=""
 volume_counter=1
 sharades=""
+users=
 
-while getopts "hu:p:d:" "opt"
+while getopts "hu:d:" "opt"
 do
 case $opt in
 'h') print_help && exit ;;
-'u') username=$OPTARG ;;
-'p') password=$OPTARG ;;
+'u')
+  read -r username password <<< $(echo "$OPTARG" | tr ";" " ")
+  echo "username: $username"
+  echo "password: $password"
+  users="$users -u $username;$password"
+;;
 'd')
-  dirs="${OPTARG}"
-  echo $dirs
-  IFS_bak=$IFS
-  IFS='='
-  read -ra DIRS <<< "$dirs"
-  IFS=$IFS_bak
-  volumes="$volumes -v ${DIRS[0]}:/bob${volume_counter}"
-  sharades="$sharades -s ${DIRS[1]};/bob${volume_counter};yes;no;no;${username}"
+  volume="${OPTARG}"
+  echo "volume option: $volume"
+  read -r volume volume_user <<< $(echo "$volume" | tr ";" " ")
+  [[ -z volume_user ]] && volume_user=$username
+  read -r volume_dir volume_name <<< $(echo "$volume" | tr "=" " ")
+  echo "volume_dir: ${volume_dir}"
+  echo "volume_name: ${volume_name}"
+  echo "volume_user: ${volume_user}"
+  [[ -z "$volume_user" ]] && echo "No user defined" && exit -1
+  volumes="$volumes -v ${volume_dir}:/bob${volume_counter}"
+  sharades="$sharades -s ${volume_name};/bob${volume_counter};yes;no;no;${volume_user}"
   (( volume_counter += 1 ))
+  unset volume_user
 ;;
 esac
 done
@@ -44,16 +53,9 @@ echo "logopas: ${username};${password}"
 
 #exit
 
-if [ -z "$username" ]
+if [ -z "$users" ]
 then
-  echo "No username specified (option -u)"
-  print_help
-  exit -1
-fi
-
-if [ -z "$password" ]
-then
-  echo "No password specified (option -p)"
+  echo "No users specified (option -u)"
   print_help
   exit -1
 fi
@@ -71,7 +73,6 @@ fi
 docker run \
 --name samba \
 --restart=always \
--ti \
 -d \
 -e USERID=$SAMBA_USERID \
 -e GROUPID=$SAMBA_GROUPID \
@@ -81,10 +82,10 @@ $volumes \
 dperson/samba \
 -r \
 -p \
--u "${username};${password}" \
 -g "map archive = no" \
 -g "map system = no" \
 -g "map hidden = no" \
+$users \
 $sharades
 
 #<name;/path>[;browse;readonly;guest;users;admins;writelist;comment]
